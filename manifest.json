@@ -1,0 +1,15 @@
+{
+  "name": "Diario de Cancha - River",
+  "short_name": "Diario River",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e30613",
+  "icons": [
+    {
+      "src": "C:\\Users\tomas\\Documents\river_app\\icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

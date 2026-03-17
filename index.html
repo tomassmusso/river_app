@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diario de Cancha - River Plate ⚪🔴⚪</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e30613">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/53/53283.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body autocomplete="off">
+
+<header class="header-river shadow-sm text-center">
+    <h1 class="display-6 fw-bold text-danger">Diario de Cancha</h1>
+    <div class="container d-flex justify-content-center align-items-center gap-2 mt-2 flex-wrap">
+        <select id="filtro-anio" class="form-select form-select-sm w-auto">
+            <option value="todos">Todos los años</option>
+        </select>
+        <button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalStats" onclick="generarEstadisticas()">📊 Estadísticas</button>
+        <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalConfig">⚙️ Configurar</button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="card shadow-sm border-0 table-container">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr><th>Fecha</th><th>Rival</th><th>Resultado</th><th>Competición</th><th>Detalles</th><th></th></tr>
+                </thead>
+                <tbody id="tabla-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<button class="btn btn-danger fab shadow-lg" data-bs-toggle="modal" data-bs-target="#modalPartido">+</button>
+
+<div class="modal fade" id="modalPartido" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Registrar Partido</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="form-partido" class="row g-3" autocomplete="off">
+                    <div class="col-md-6"><label class="form-label fw-bold small">Rival</label><input type="text" id="partido" class="form-control" required></div>
+                    <div class="col-md-3"><label class="form-label fw-bold small">Fecha</label><input type="date" id="fecha" class="form-control" required></div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">Resultado</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="number" id="goles-river" class="form-control text-center" placeholder="R" min="0" required>
+                            <span>-</span>
+                            <input type="number" id="goles-rival" class="form-control text-center" placeholder="V" min="0" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6"><label class="form-label fw-bold small">Competición</label><select id="competicion" class="form-select"></select></div>
+                    <div class="col-md-6"><label class="form-label fw-bold small">Instancia</label><input type="text" id="instancia" class="form-control" placeholder="Ej: Fecha 12 / Final"></div>
+                    <div class="col-md-6"><label class="form-label fw-bold small">Entrenador</label><select id="entrenador" class="form-select"></select></div>
+                    <div class="col-md-6"><label class="form-label fw-bold small">Ubicación</label><select id="ubicacion" class="form-select"></select></div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold small">Goleadores</label>
+                        <div id="contenedor-goleadores"></div>
+                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="agregarInputGoleador()">+ Agregar Goleador</button>
+                    </div>
+                    <div class="col-12"><label class="form-label fw-bold small">Notas</label><textarea id="notas" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12 text-end"><button type="submit" class="btn btn-danger px-5">Guardar</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfig" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-secondary text-white"><h5 class="modal-title">Configuración</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <label class="form-label small fw-bold">🏆 Competiciones</label>
+                <div class="input-group mb-2"><input type="text" id="nueva-comp" class="form-control form-control-sm"><button class="btn btn-dark btn-sm" onclick="agregarOpcion('competiciones', 'nueva-comp')">+</button></div>
+                <ul id="lista-config-comp" class="list-group mb-3 small"></ul>
+
+                <label class="form-label small fw-bold">👔 Entrenadores</label>
+                <div class="input-group mb-2"><input type="text" id="nuevo-dt" class="form-control form-control-sm"><button class="btn btn-dark btn-sm" onclick="agregarOpcion('entrenadores', 'nuevo-dt')">+</button></div>
+                <ul id="lista-config-dt" class="list-group mb-3 small"></ul>
+
+                <label class="form-label small fw-bold">📍 Ubicaciones</label>
+                <div class="input-group mb-2"><input type="text" id="nuevo-lugar" class="form-control form-control-sm"><button class="btn btn-dark btn-sm" onclick="agregarOpcion('ubicaciones', 'nuevo-lugar')">+</button></div>
+                <ul id="lista-config-lugar" class="list-group mb-4 small"></ul>
+
+                <hr>
+                <h6 class="fw-bold small text-muted text-uppercase mb-3">Respaldo</h6>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-dark btn-sm" onclick="exportarDatos()">📤 Exportar JSON</button>
+                    <label class="btn btn-outline-primary btn-sm mb-0">📥 Importar JSON<input type="file" id="input-import" hidden accept=".json" onchange="importarDatos(event)"></label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalStats" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Estadísticas</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" id="statsTabs">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-rendimiento">📈 Rendimiento</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-goleadores">⚽ Goles</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rivales">🏟️ Rivales</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-lugares">📍 Lugares</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-dts">👔 DTs</button></li>
+                </ul>
+                <div class="tab-content border p-3 rounded bg-light shadow-sm">
+                    <div class="tab-pane fade show active text-center" id="tab-rendimiento"></div>
+                    <div class="tab-pane fade" id="tab-goleadores"></div>
+                    <div class="tab-pane fade" id="tab-rivales"></div>
+                    <div class="tab-pane fade" id="tab-lugares"></div>
+                    <div class="tab-pane fade" id="tab-dts"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
