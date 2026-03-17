@@ -40,15 +40,51 @@ body {
 .badge-loss { background-color: var(--river-red); }
 .badge-draw { background-color: #ffc107; color: #212529; }
 
-.stats-total-card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 10px;
-    margin-bottom: 10px;
-    display: inline-block;
-    min-width: 140px;
+/* --- ESTADÍSTICAS --- */
+.stats-main-number {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #000;
+}
+
+.stats-secondary-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #000;
+}
+
+.stats-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #000;
 }
 
 .nav-tabs .nav-link { color: #666; font-size: 0.9rem; padding: 8px; }
 .nav-tabs .nav-link.active { color: var(--river-red); border-bottom: 3px solid var(--river-red); background: transparent; }
+
+.btn-edit { color: #0d6efd; text-decoration: none; }
+.btn-edit:hover { color: #0a58ca; }
+
+/* Centrar contenido de todas las celdas de la tabla */
+.table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Alineación específica para la columna de acciones */
+.acciones-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Espacio entre el lápiz y el tacho */
+    align-items: center;
+}
+
+.btn-edit, .text-danger {
+    text-decoration: none;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+}

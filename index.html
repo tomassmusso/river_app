@@ -29,7 +29,7 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
-                    <tr><th>Fecha</th><th>Rival</th><th>Resultado</th><th>Competición</th><th>Detalles</th><th></th></tr>
+                    <tr><th>Fecha</th><th>Rival</th><th>Resultado</th><th>Competición</th><th>Detalles</th><th>Acciones</th></tr>
                 </thead>
                 <tbody id="tabla-body"></tbody>
             </table>
@@ -37,29 +37,31 @@
     </div>
 </div>
 
-<button class="btn btn-danger fab shadow-lg" data-bs-toggle="modal" data-bs-target="#modalPartido">+</button>
+<button class="btn btn-danger fab shadow-lg" onclick="prepararNuevo()">+</button>
 
 <div class="modal fade" id="modalPartido" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Registrar Partido</h5>
+                <h5 class="modal-title" id="modalTitle">Registrar Partido</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <form id="form-partido" class="row g-3" autocomplete="off">
+                    <input type="hidden" id="edit-id">
+                    
                     <div class="col-md-6"><label class="form-label fw-bold small">Rival</label><input type="text" id="partido" class="form-control" required></div>
                     <div class="col-md-3"><label class="form-label fw-bold small">Fecha</label><input type="date" id="fecha" class="form-control" required></div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold small">Resultado</label>
                         <div class="d-flex align-items-center gap-2">
-                            <input type="number" id="goles-river" class="form-control text-center" placeholder="R" min="0" required>
+                            <input type="number" id="goles-river" class="form-control text-center" min="0" required>
                             <span>-</span>
-                            <input type="number" id="goles-rival" class="form-control text-center" placeholder="V" min="0" required>
+                            <input type="number" id="goles-rival" class="form-control text-center" min="0" required>
                         </div>
                     </div>
-                    <div class="col-md-6"><label class="form-label fw-bold small">Competición</label><select id="competicion" class="form-select"></select></div>
-                    <div class="col-md-6"><label class="form-label fw-bold small">Instancia</label><input type="text" id="instancia" class="form-control" placeholder="Ej: Fecha 12 / Final"></div>
+                    <div class="col-md-6"><label class="form-label fw-bold small">Competición</label><input type="text" id="competicion" class="form-control" required></div>
+                    <div class="col-md-6"><label class="form-label fw-bold small">Instancia</label><input type="text" id="instancia" class="form-control"></div>
                     <div class="col-md-6"><label class="form-label fw-bold small">Entrenador</label><select id="entrenador" class="form-select"></select></div>
                     <div class="col-md-6"><label class="form-label fw-bold small">Ubicación</label><select id="ubicacion" class="form-select"></select></div>
                     <div class="col-12">
@@ -80,10 +82,6 @@
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-secondary text-white"><h5 class="modal-title">Configuración</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                <label class="form-label small fw-bold">🏆 Competiciones</label>
-                <div class="input-group mb-2"><input type="text" id="nueva-comp" class="form-control form-control-sm"><button class="btn btn-dark btn-sm" onclick="agregarOpcion('competiciones', 'nueva-comp')">+</button></div>
-                <ul id="lista-config-comp" class="list-group mb-3 small"></ul>
-
                 <label class="form-label small fw-bold">👔 Entrenadores</label>
                 <div class="input-group mb-2"><input type="text" id="nuevo-dt" class="form-control form-control-sm"><button class="btn btn-dark btn-sm" onclick="agregarOpcion('entrenadores', 'nuevo-dt')">+</button></div>
                 <ul id="lista-config-dt" class="list-group mb-3 small"></ul>

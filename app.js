@@ -3,10 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tablaBody = document.getElementById('tabla-body');
     const filtroAnio = document.getElementById('filtro-anio');
     const contenedorGoleadores = document.getElementById('contenedor-goleadores');
+    const modalPartido = new bootstrap.Modal(document.getElementById('modalPartido'));
 
     // --- INICIALIZACIÓN ---
     const configs = {
-        'config_competiciones': ['Liga Profesional', 'Copa Libertadores', 'Copa Argentina', 'Amistoso'],
         'config_ubicaciones': ['Sívori Alta', 'Sívori Baja', 'Belgrano Alta', 'San Martín Alta', 'Centenario Alta'],
         'config_entrenadores': ['Marcelo Gallardo', 'Martín Demichelis', 'Eduardo Coudet']
     };
@@ -30,7 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
         contenedorGoleadores.appendChild(div);
     };
 
-    // --- GUARDAR ---
+    window.prepararNuevo = () => {
+        document.getElementById('modalTitle').innerText = 'Registrar Partido';
+        document.getElementById('edit-id').value = ''; // Limpiar ID de edición
+        form.reset();
+        contenedorGoleadores.innerHTML = '';
+        modalPartido.show();
+    };
+
+    // --- GUARDAR (NUEVO O EDITAR) ---
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const listaGoleadores = [];
@@ -40,8 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (n) listaGoleadores.push({ nombre: n, cantidad: c });
         });
 
-        const nuevoPartido = {
-            id: Date.now(),
+        const idEditando = document.getElementById('edit-id').value;
+        const partidos = JSON.parse(localStorage.getItem('partidosRiver')) || [];
+
+        const datosPartido = {
+            id: idEditando ? parseInt(idEditando) : Date.now(),
             partido: document.getElementById('partido').value.trim(),
             fecha: document.getElementById('fecha').value,
             resultado: `${document.getElementById('goles-river').value}-${document.getElementById('goles-rival').value}`,
@@ -53,17 +64,22 @@ document.addEventListener('DOMContentLoaded', () => {
             notas: document.getElementById('notas').value
         };
 
-        const partidos = JSON.parse(localStorage.getItem('partidosRiver')) || [];
-        partidos.push(nuevoPartido);
-        localStorage.setItem('partidosRiver', JSON.stringify(partidos));
+        if (idEditando) {
+            // Reemplazar el existente
+            const index = partidos.findIndex(p => p.id === parseInt(idEditando));
+            if (index !== -1) partidos[index] = datosPartido;
+        } else {
+            // Agregar nuevo
+            partidos.push(datosPartido);
+        }
 
+        localStorage.setItem('partidosRiver', JSON.stringify(partidos));
         form.reset();
-        contenedorGoleadores.innerHTML = '';
-        bootstrap.Modal.getInstance(document.getElementById('modalPartido')).hide();
+        modalPartido.hide();
         cargarPartidos();
     });
 
-    // --- TABLA PRINCIPAL ---
+    // --- CARGAR PARTIDOS EN TABLA ---
     function cargarPartidos() {
         const partidos = JSON.parse(localStorage.getItem('partidosRiver')) || [];
         tablaBody.innerHTML = '';
@@ -80,18 +96,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="small text-muted">${d}/${m}/${y}</td>
-                <td class="fw-bold">${p.partido}</td>
-                <td><span class="badge ${colorClass}">${p.resultado}</span></td>
-                <td><small>${p.competicion}</small></td>
-                <td><button class="btn btn-sm btn-light border" onclick="toggleDetalle(${p.id})">Notas</button></td>
-                <td class="text-end"><button class="btn btn-link text-danger p-0" onclick="eliminar(${p.id})">🗑️</button></td>
-            `;
+    <td class="small text-muted">${d}/${m}/${y}</td>
+    <td class="fw-bold">${p.partido}</td>
+    <td><span class="badge ${colorClass}">${p.resultado}</span></td>
+    <td><small>${p.competicion}</small></td>
+    <td><button class="btn btn-sm btn-light border" onclick="toggleDetalle(${p.id})">Notas</button></td>
+    <td>
+        <div class="acciones-container">
+            <button class="btn btn-link btn-edit p-0" onclick="editarPartido(${p.id})">✏️</button>
+            <button class="btn btn-link text-danger p-0" onclick="eliminar(${p.id})">🗑️</button>
+        </div>
+    </td>
+`;
             const trDetalle = document.createElement('tr');
             trDetalle.id = `detalle-${p.id}`;
             trDetalle.className = 'd-none';
             trDetalle.innerHTML = `
-                <td colspan="6" class="nota-expandida p-3">
+                <td colspan="6" class="p-3 bg-light shadow-inner">
                     <div class="row g-3 small">
                         <div class="col-md-3"><strong>📍 Instancia:</strong><br>${p.instancia || '-'}</div>
                         <div class="col-md-3"><strong>👔 DT:</strong><br>${p.entrenador || '-'}</div>
@@ -105,15 +126,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- EDITAR REGISTRO ---
+    window.editarPartido = (id) => {
+        const partidos = JSON.parse(localStorage.getItem('partidosRiver')) || [];
+        const p = partidos.find(partido => partido.id === id);
+        if (!p) return;
+
+        document.getElementById('modalTitle').innerText = 'Editar Partido';
+        document.getElementById('edit-id').value = p.id;
+        document.getElementById('partido').value = p.partido;
+        document.getElementById('fecha').value = p.fecha;
+        
+        const scores = p.resultado.split('-');
+        document.getElementById('goles-river').value = scores[0];
+        document.getElementById('goles-rival').value = scores[1];
+        
+        document.getElementById('competicion').value = p.competicion;
+        document.getElementById('instancia').value = p.instancia || '';
+        document.getElementById('entrenador').value = p.entrenador;
+        document.getElementById('ubicacion').value = p.ubicacion;
+        document.getElementById('notas').value = p.notas || '';
+
+        // Cargar goleadores
+        contenedorGoleadores.innerHTML = '';
+        if (p.goleadores && p.goleadores.length > 0) {
+            p.goleadores.forEach(g => agregarInputGoleador(g.nombre, g.cantidad));
+        }
+
+        modalPartido.show();
+    };
+
     // --- ESTADÍSTICAS ---
     window.generarEstadisticas = () => {
         const partidos = JSON.parse(localStorage.getItem('partidosRiver')) || [];
         let v = 0, e = 0, d = 0;
-        
-        const golesMap = {};
-        const rivalesMap = {};
-        const lugaresMap = {};
-        const dtsMap = {};
+        const golesMap = {}, rivalesMap = {}, lugaresMap = {}, dtsMap = {};
 
         partidos.forEach(p => {
             const s = p.resultado.split('-').map(n => parseInt(n));
@@ -123,48 +170,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const n = g.nombre.trim().toUpperCase();
                 if(n) golesMap[n] = (golesMap[n] || 0) + g.cantidad;
             });
-
             const riv = p.partido?.trim().toUpperCase();
             if(riv) rivalesMap[riv] = (rivalesMap[riv] || 0) + 1;
-
             const lug = p.ubicacion?.trim().toUpperCase();
             if(lug) lugaresMap[lug] = (lugaresMap[lug] || 0) + 1;
-
             const dt = p.entrenador?.trim().toUpperCase();
             if(dt) dtsMap[dt] = (dtsMap[dt] || 0) + 1;
         });
 
         const total = partidos.length || 0;
-        const porcVic = total > 0 ? Math.round((v / total) * 100) : 0;
+        const efec = total > 0 ? ((v * 3 + e) / (total * 3) * 100).toFixed(1) : 0;
 
-        let colorPorcentaje = 'text-warning'; 
-        if (v > d) colorPorcentaje = 'text-success'; 
-        if (d > v) colorPorcentaje = 'text-danger';  
-
-        // Render Rendimiento
         document.getElementById('tab-rendimiento').innerHTML = `
-            <div class="py-3">
-                <div class="stats-total-card shadow-sm mb-4">
-                    <span class="text-muted small text-uppercase d-block">Partidos Totales</span>
-                    <span class="h2 fw-bold mb-0">${total}</span>
+            <div class="py-4">
+                <div class="mb-2">
+                    <div class="stats-secondary-number">${total}</div>
+                    <div class="stats-label">Partidos Totales</div>
                 </div>
-                <div class="mb-4">
-                    <span class="text-muted small text-uppercase fw-bold d-block mb-1">Efectividad de Victorias</span>
-                    <h2 class="display-4 fw-bolder ${colorPorcentaje} mb-0">${porcVic}%</h2>
+                <div class="my-4 pt-3 pb-3 border-top border-bottom">
+                    <div class="stats-main-number">${efec}%</div>
+                    <div class="stats-label">Efectividad Total</div>
                 </div>
-                <div class="d-flex justify-content-around pt-3 border-top">
-                    <div class="text-center">
-                        <div class="h5 mb-0 text-secondary">${v}</div>
-                        <div class="text-muted small">Ganados</div>
-                    </div>
-                    <div class="text-center px-4">
-                        <div class="h5 mb-0 text-secondary">${e}</div>
-                        <div class="text-muted small">Empatados</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="h5 mb-0 text-secondary">${d}</div>
-                        <div class="text-muted small">Perdidos</div>
-                    </div>
+                <div class="d-flex justify-content-around mt-3">
+                    <div><div class="stats-secondary-number fw-bold">${v}</div><div class="stats-label">Ganados</div></div>
+                    <div><div class="stats-secondary-number fw-bold">${e}</div><div class="stats-label">Empatados</div></div>
+                    <div><div class="stats-secondary-number fw-bold">${d}</div><div class="stats-label">Perdidos</div></div>
                 </div>
             </div>
         `;
@@ -189,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.exportarDatos = () => {
         const datos = {
             partidos: JSON.parse(localStorage.getItem('partidosRiver')) || [],
-            comp: JSON.parse(localStorage.getItem('config_competiciones')),
             lugar: JSON.parse(localStorage.getItem('config_ubicaciones')),
             dt: JSON.parse(localStorage.getItem('config_entrenadores'))
         };
@@ -206,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const d = JSON.parse(e.target.result);
             if (confirm('¿Importar datos?')) {
                 localStorage.setItem('partidosRiver', JSON.stringify(d.partidos || []));
-                localStorage.setItem('config_competiciones', JSON.stringify(d.comp || []));
                 localStorage.setItem('config_ubicaciones', JSON.stringify(d.lugar || []));
                 localStorage.setItem('config_entrenadores', JSON.stringify(d.dt || []));
                 location.reload();
@@ -237,10 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const lista = JSON.parse(localStorage.getItem(`config_${tipo}`)) || [];
             const sel = document.getElementById(id);
             if(sel) sel.innerHTML = lista.map(i => `<option value="${i}">${i}</option>`).join('');
-            const listUI = document.getElementById(`lista-config-${id === 'competicion' ? 'comp' : (id === 'entrenador' ? 'dt' : 'lugar')}`);
+            const listUI = document.getElementById(`lista-config-${id === 'entrenador' ? 'dt' : 'lugar'}`);
             if(listUI) listUI.innerHTML = lista.map(i => `<li class="list-group-item d-flex justify-content-between p-1 align-items-center">${i}<button class="btn btn-sm btn-link text-danger p-0" onclick="eliminarOpcion('${tipo}', '${i}')">✕</button></li>`).join('');
         };
-        llenar('competicion', 'competiciones');
         llenar('entrenador', 'entrenadores');
         llenar('ubicacion', 'ubicaciones');
     }
