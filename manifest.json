@@ -7,7 +7,7 @@
   "theme_color": "#e30613",
   "icons": [
     {
-      "src": "C:\\Users\tomas\\Documents\river_app\\icon.png",
+      "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
